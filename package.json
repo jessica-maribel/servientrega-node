@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "grafbase": "npx grafbase@latest dev --port 4001 --config grafbase/grafbase.config.js"
+    "grafbase": "npx grafbase@latest dev --port 4001 --config grafbase/config.toml"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

@@ -1,0 +1,8 @@
+[graph]
+
+  # Define the upstream subgraph(s) to compose
+  [[graph.subgraphs]]
+  name = "users"
+  # If your backend runs elsewhere, change this URL.
+  url = "http://localhost:4000/graphql"
+
