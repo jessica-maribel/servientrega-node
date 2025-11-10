@@ -37,6 +37,11 @@ app.post(
 );
 
 // Dedicated GraphiQL UI endpoint
+// Relax Helmet for GraphiQL so it can load its assets
+app.use(
+  "/graphiql",
+  helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false, crossOriginResourcePolicy: false })
+);
 app.use(
   "/graphiql",
   graphqlHTTP({
