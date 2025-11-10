@@ -10,10 +10,24 @@ import { graphqlHTTP } from "express-graphql";
 import { schema as userSchema, root as userRoot } from "./graphql/user.schema.js";
 
 dotenv.config();
-await connectDB();
+await connectDB(); // OK si usas "type":"module" en package.json
 
 const app = express();
-app.use(helmet());
+
+// En DEV desactiva CSP para que GraphiQL pueda cargar su JS inline.
+// En PROD, deja CSP activado.
+const isProd = process.env.NODE_ENV === "production";
+// Permitir habilitar GraphiQL explícitamente en cualquier entorno con GRAPHIQL=true
+const enableGraphiQL = process.env.GRAPHIQL === "true" || !isProd;
+app.use(
+  helmet({
+    // Si GraphiQL está habilitado, desactiva CSP para permitir los scripts inline de GraphiQL
+    contentSecurityPolicy: enableGraphiQL ? false : isProd ? undefined : false,
+    crossOriginEmbedderPolicy: enableGraphiQL ? false : isProd ? undefined : false,
+    crossOriginResourcePolicy: enableGraphiQL ? false : isProd ? undefined : false,
+  })
+);
+
 app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
@@ -23,37 +37,21 @@ app.get("/", (req, res) => res.send({ ok: true, message: "Servientrega API" }));
 app.use("/api/auth", authRoutes);
 app.use("/api/guias", guiaRoutes);
 
-// Redirect GET /graphql (browser) to GraphiQL UI
-app.get("/graphql", (req, res) => res.redirect(302, "/graphiql"));
-
-// GraphQL endpoint (users listing)
-app.post(
+// === GraphQL (acepta GET y POST) ===
+// - En dev habilitamos GraphiQL para probar en el navegador.
+// - En prod lo desactivamos por seguridad.
+app.use(
   "/graphql",
   graphqlHTTP({
     schema: userSchema,
     rootValue: userRoot,
-    graphiql: false,
+    graphiql: enableGraphiQL, // http://localhost:4000/graphql cuando esté habilitado
   })
 );
 
-// Dedicated GraphiQL UI endpoint
-// Relax Helmet for GraphiQL so it can load its assets
-app.use(
-  "/graphiql",
-  helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false, crossOriginResourcePolicy: false })
-);
-app.use(
-  "/graphiql",
-  graphqlHTTP({
-    schema: userSchema,
-    rootValue: userRoot,
-    graphiql: true,
-  })
-);
-
-// error handler
+// Manejador de errores
 app.use((err, req, res, next) => {
-  console.error(err);
+  console.error("Unhandled error:", err);
   res.status(500).json({ message: "Internal Server Error" });
 });
 

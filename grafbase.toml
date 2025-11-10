@@ -1,0 +1,5 @@
+# Opcional: otras secciones del gateway…
+
+# Declara tu(s) subgraph(s). El nombre “api” es arbitrario.
+[subgraphs.api]
+introspection_url = "http://localhost:4000/graphql"
